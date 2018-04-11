@@ -9,11 +9,16 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"strconv"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
+	"github.com/ipfs/go-ipfs-api"
 )
+
+var shApi *shell.Shell
+var boolConnect = false
 
 // Define the BlacklistContract structure
 type demoContract struct {
@@ -62,6 +67,7 @@ func (B *demoContract) Createdemo(stub shim.ChaincodeStubInterface, Args []strin
 	if len(Args) != 2 {
 		return shim.Error("Incorrect number of arguments. Expecting 3")
 	}
+
 	time, err := stub.GetTxTimestamp()
 	if err != nil {
 		return shim.Error(err.Error())
@@ -79,6 +85,18 @@ func (B *demoContract) GetDataFromIPFS(stub shim.ChaincodeStubInterface, Args []
 		return shim.Error("Incorrect number of arguments. Expecting 1")
 	}
 
+	if !boolConnect {
+		shApi = shell.NewShell("localhost:5001")
+		boolConnect = true
+	}
+	rc, err := shApi.Cat(fmt.Sprintf("/ipfs/%s", Args[0]))
+	if err != nil {
+		fmt.Println("Cat failed, error code is ", err)
+		return shim.Error("Do Cat failed")
+	}
+	resp, _ := ioutil.ReadAll(rc)
+
+	return shim.Success(resp)
 }
 
 func main() {
