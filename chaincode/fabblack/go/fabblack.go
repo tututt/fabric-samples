@@ -9,7 +9,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"strconv"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
@@ -78,25 +77,6 @@ func (B *demoContract) Createdemo(stub shim.ChaincodeStubInterface, Args []strin
 	stub.PutState(Args[0], demoAsBytes)
 
 	return shim.Success(nil)
-}
-
-func (B *demoContract) GetDataFromIPFS(stub shim.ChaincodeStubInterface, Args []string) pb.Response {
-	if len(Args) != 1 {
-		return shim.Error("Incorrect number of arguments. Expecting 1")
-	}
-
-	if !boolConnect {
-		shApi = shell.NewShell("localhost:5001")
-		boolConnect = true
-	}
-	rc, err := shApi.Cat(fmt.Sprintf("/ipfs/%s", Args[0]))
-	if err != nil {
-		fmt.Println("Cat failed, error code is ", err)
-		return shim.Error("Do Cat failed")
-	}
-	resp, _ := ioutil.ReadAll(rc)
-
-	return shim.Success(resp)
 }
 
 func main() {
